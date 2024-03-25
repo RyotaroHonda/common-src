@@ -39,13 +39,25 @@ begin
         weTx	<= '0';
         wdTx	<= (others => '0');
       else
-        weTx	<= rvFromEVB;
-        wdTx	<= rdFromEVB;
+        if(isActive = '1') then
+          -- Normal operation --
+          weTx	<= rvFromEVB;
+          wdTx	<= rdFromEVB;
 
-        if(emptyFromEVB = '0' AND isActive = '1' AND afullTx = '0') then
-          reToEVB	<= '1';
+          if(emptyFromEVB = '0' AND afullTx = '0') then
+            reToEVB	<= '1';
+          else
+            reToEVB	<= '0';
+          end if;
         else
-          reToEVB	<= '0';
+          -- Discard remaining data --
+          weTx	<= '0';
+
+          if(emptyFromEVB = '0') then
+            reToEVB	<= '1';
+          else
+            reToEVB	<= '0';
+          end if;
         end if;
       end if;
     end if;

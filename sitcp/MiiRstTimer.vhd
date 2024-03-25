@@ -58,7 +58,6 @@ begin
 
   uOneShotRst : entity mylib.EdgeDetector
     port map(
-      rst   => rst,
       clk   => clk_2kHz,
       dIn   => reg_reset,
       dOut  => rstMiiOut

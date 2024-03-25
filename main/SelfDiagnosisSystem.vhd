@@ -157,7 +157,7 @@ begin
 
   process(clk)
   begin
-    elsif(clk'event and clk = '1') then
+    if(clk'event and clk = '1') then
       if(sync_reset = '1') then
         reg_sds_status  <= (others => '0');
       else

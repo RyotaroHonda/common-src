@@ -10,6 +10,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
+library mylib;
+
 entity global_sitcp_manager is
     Port ( RST 			: in  STD_LOGIC;
            CLK			 	: in  STD_LOGIC;

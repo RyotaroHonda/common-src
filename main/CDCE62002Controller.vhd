@@ -117,7 +117,7 @@ begin
   end process;
 
   u_edge_rst : entity mylib.EdgeDetector
-    port map('0', clkIndep, rst_counter(kWidthRstCnt-1), rst_msb_edge);
+    port map(clkIndep, rst_counter(kWidthRstCnt-1), rst_msb_edge);
 
   u_rst_sr : process(clkIndep)
   begin
@@ -135,7 +135,7 @@ begin
     port map( clkIndep, chipReset, sync_chip_reset );
 
   u_edge_crst : entity mylib.EdgeDetector
-    port map('0', clkIndep, sync_chip_reset, edge_chip_reset);
+    port map(clkIndep, sync_chip_reset, edge_chip_reset);
 
   -- Main --
   ODDR_inst : ODDR
