@@ -69,102 +69,106 @@ BEGIN
   errorBit  <= '1' when(spi_mode = "01" or spi_mode = "10") else '0';
 
   --generate the timing for the bus clock (sck_clk) and the data clock (data_clk)
-  PROCESS(clk, reset)
+  PROCESS(clk)
     VARIABLE count  :  integer RANGE 0 TO divider*4;  --timing for clock generation
   BEGIN
-    IF(reset = '1') THEN                --reset asserted
-      count := 0;
-    ELSIF(clk'EVENT AND clk = '1') THEN
-      data_clk_prev <= data_clk;          --store previous value of data clock
-      IF(count = divider*4-1) THEN        --end of timing cycle
-        count := 0;                       --reset timer
+    IF(clk'EVENT AND clk = '1') THEN
+      IF(reset = '1') THEN                --reset asserted
+        count := 0;
       ELSE
-        count := count + 1;               --continue clock generation timing
+        data_clk_prev <= data_clk;          --store previous value of data clock
+        IF(count = divider*4-1) THEN        --end of timing cycle
+          count := 0;                       --reset timer
+        ELSE
+          count := count + 1;               --continue clock generation timing
+        END IF;
+        CASE count IS
+          WHEN 0 TO divider-1 =>            --first 1/4 cycle of clocking
+            sck_clk   <= '0';
+            data_clk  <= '0';
+          WHEN divider TO divider*2-1 =>    --second 1/4 cycle of clocking
+            sck_clk   <= '0';
+            data_clk  <= '1';
+          WHEN divider*2 TO divider*3-1 =>  --third 1/4 cycle of clocking
+            sck_clk   <= '1';
+            data_clk  <= '1';
+          WHEN OTHERS =>                    --last 1/4 cycle of clocking
+            sck_clk   <= '1';
+            data_clk  <= '0';
+        END CASE;
       END IF;
-      CASE count IS
-        WHEN 0 TO divider-1 =>            --first 1/4 cycle of clocking
-          sck_clk   <= '0';
-          data_clk  <= '0';
-        WHEN divider TO divider*2-1 =>    --second 1/4 cycle of clocking
-          sck_clk   <= '0';
-          data_clk  <= '1';
-        WHEN divider*2 TO divider*3-1 =>  --third 1/4 cycle of clocking
-          sck_clk   <= '1';
-          data_clk  <= '1';
-        WHEN OTHERS =>                    --last 1/4 cycle of clocking
-          sck_clk   <= '1';
-          data_clk  <= '0';
-      END CASE;
     END IF;
   END PROCESS;
 
   --state machine and writing to sda during sck low (data_clk rising edge)
-  PROCESS(clk, reset)
+  PROCESS(clk)
   BEGIN
-    IF(reset = '1') THEN                     --reset asserted
-      state     <= ready;                    --return to initial state
-      csb       <= '1';                      --chip select bar
-      busy      <= '1';                      --indicate not available
-      sck_ena   <= '0';                      --sets sck high impedance
-      mosi_int  <= '0';                      --sets sda high impedance
-      bit_cnt   <= widthData-1;              --restarts data bit counter
-      dataRd    <= (others => '0');          --clear data read port
-    ELSIF(clk'EVENT AND clk = '1') THEN
-      IF(data_clk = '1' AND data_clk_prev = '0') THEN  --data clock rising edge
-        CASE state IS
-          WHEN ready =>                      --idle state
-            IF(start = '1') THEN             --transaction requested
-              busy    <= '1';                --flag busy
-              data_tx <= dataWr;             --collect requested data to write
-              csb     <= '0';                --enable slave chip
-              state   <= startSeq;           --go to start bit
-            ELSE                             --remain idle
-              busy    <= '0';                --unflag busy
-              state   <= ready;              --remain idle
-            END IF;
-          WHEN startSeq =>                   --start bit of transaction
-            busy      <= '1';                --resume busy if continuous mode
-            mosi_int  <= data_tx(bit_cnt);   --set first address bit to bus
-            if(spi_mode = "00") then
-              sck_ena   <= '1';              --enable sck output
-            end if;
-            state     <= command;            --go to command
-          WHEN command =>                    --address and command byte of transaction
-            IF(bit_cnt = 0) THEN             --command transmit finished
---              mosi_int <= '1';             --release sda for slave acknowledge
-              bit_cnt <= widthData-1;        --reset bit counter for "byte" states
+    IF(clk'EVENT AND clk = '1') THEN
+      IF(reset = '1') THEN                     --reset asserted
+        state     <= ready;                    --return to initial state
+        csb       <= '1';                      --chip select bar
+        busy      <= '1';                      --indicate not available
+        sck_ena   <= '0';                      --sets sck high impedance
+        mosi_int  <= '0';                      --sets sda high impedance
+        bit_cnt   <= widthData-1;              --restarts data bit counter
+        dataRd    <= (others => '0');          --clear data read port
+      ELSE
+        IF(data_clk = '1' AND data_clk_prev = '0') THEN  --data clock rising edge
+          CASE state IS
+            WHEN ready =>                      --idle state
+              IF(start = '1') THEN             --transaction requested
+                busy    <= '1';                --flag busy
+                data_tx <= dataWr;             --collect requested data to write
+                csb     <= '0';                --enable slave chip
+                state   <= startSeq;           --go to start bit
+              ELSE                             --remain idle
+                busy    <= '0';                --unflag busy
+                state   <= ready;              --remain idle
+              END IF;
+            WHEN startSeq =>                   --start bit of transaction
+              busy      <= '1';                --resume busy if continuous mode
+              mosi_int  <= data_tx(bit_cnt);   --set first address bit to bus
               if(spi_mode = "00") then
-                sck_ena   <= '0';            --enable sck output
+                sck_ena   <= '1';              --enable sck output
               end if;
-              state   <= stopSeq;             --go to slave acknowledge (command)
-            ELSE                              --next clock cycle of command state
-              bit_cnt <= bit_cnt - 1;         --keep track of transaction bits
-              mosi_int <= data_tx(bit_cnt-1); --write address/command bit to bus
-              state   <= command;             --continue with command
-            END IF;
-          WHEN stopSeq =>                    --stop bit of transaction
-            csb       <= '1';                --disable slave
-            dataRd    <= data_rx;            --latch rx-data
-            state     <= finalize;           --go to finalize state
-          when finalize =>
-            busy      <= '0';                --unflag busy
-            state     <= ready;              --go to idle state
-        END CASE;
-      ELSIF(data_clk = '0' AND data_clk_prev = '1') THEN  --data clock falling edge
-        CASE state IS
-          WHEN startSeq =>
-            IF(sck_ena = '0' and spi_mode = "11") THEN  --starting new transaction
-              sck_ena <= '1';                           --enable sck output
-            END IF;
-          WHEN command =>                               --receiving slave data
-            data_rx(bit_cnt) <= miso;                   --receive current slave data bit
-          WHEN stopSeq =>
-            if(spi_mode = "11") then
-              sck_ena <= '0';                           --disable sck
-            end if;
-          WHEN OTHERS =>
-            NULL;
-        END CASE;
+              state     <= command;            --go to command
+            WHEN command =>                    --address and command byte of transaction
+              IF(bit_cnt = 0) THEN             --command transmit finished
+  --              mosi_int <= '1';             --release sda for slave acknowledge
+                bit_cnt <= widthData-1;        --reset bit counter for "byte" states
+                if(spi_mode = "00") then
+                  sck_ena   <= '0';            --enable sck output
+                end if;
+                state   <= stopSeq;             --go to slave acknowledge (command)
+              ELSE                              --next clock cycle of command state
+                bit_cnt <= bit_cnt - 1;         --keep track of transaction bits
+                mosi_int <= data_tx(bit_cnt-1); --write address/command bit to bus
+                state   <= command;             --continue with command
+              END IF;
+            WHEN stopSeq =>                    --stop bit of transaction
+              csb       <= '1';                --disable slave
+              dataRd    <= data_rx;            --latch rx-data
+              state     <= finalize;           --go to finalize state
+            when finalize =>
+              busy      <= '0';                --unflag busy
+              state     <= ready;              --go to idle state
+          END CASE;
+        ELSIF(data_clk = '0' AND data_clk_prev = '1') THEN  --data clock falling edge
+          CASE state IS
+            WHEN startSeq =>
+              IF(sck_ena = '0' and spi_mode = "11") THEN  --starting new transaction
+                sck_ena <= '1';                           --enable sck output
+              END IF;
+            WHEN command =>                               --receiving slave data
+              data_rx(bit_cnt) <= miso;                   --receive current slave data bit
+            WHEN stopSeq =>
+              if(spi_mode = "11") then
+                sck_ena <= '0';                           --disable sck
+              end if;
+            WHEN OTHERS =>
+              NULL;
+          END CASE;
+        END IF;
       END IF;
     END IF;
   END PROCESS;

@@ -298,10 +298,12 @@ begin
   edge_busy_spi_if  <= busy_spi_if_prev & busy_spi_if;
   process(clkSpi)
   begin
-    if(sync_reset_spi = '1') then
-      busy_spi_if_prev  <= '0';
-    elsif(clkSpi'event and clkSpi = '1') then
-      busy_spi_if_prev  <= busy_spi_if;
+    if(clkSpi'event and clkSpi = '1') then
+      if(sync_reset_spi = '1') then
+        busy_spi_if_prev  <= '0';
+      else
+        busy_spi_if_prev  <= busy_spi_if;
+      end if;
     end if;
   end process;
 
