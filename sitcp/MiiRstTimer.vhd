@@ -17,50 +17,42 @@ end MiiRstTimer;
 architecture RTL of MiiRstTimer is
   attribute keep : string;
 
-  -- signal decralation -----------------------------------------------------
-  signal clk_src  : std_logic_vector(kNumInstance downto 0);
-  signal clk_div  : std_logic_vector(kNumInstance-1 downto 0);
-  signal clk_2kHz : std_logic;
+  -- System --
+  signal sync_reset           : std_logic;
+  constant kWidthResetSync    : integer:= 16;
+  signal reset_shiftreg       : std_logic_vector(kWidthResetSync-1 downto 0);
 
-  signal reg_reset    : std_logic;
-  signal reg_counter  : std_logic_vector(kPresetCount'range);
+  -- signal decralation -----------------------------------------------------
+  signal reg_reset    : std_logic:= '1';
+  signal reg_counter  : std_logic_vector(kWidthCounter-1 downto 0):= (others => '1');
 
 begin
   -- ====================== body ============================= --
-  clk_2kHz  <= clk_div(kNumInstance-1);
+  rstMiiOut <= reg_reset;
 
-  clk_src(0)  <= clk;
-  gen_clkdiv : for i in 0 to kNumInstance-1 generate
+  process(clk, sync_reset)
   begin
-    clk_src(i+1)  <= clk_div(i);
-
-    uDiv10 : entity mylib.Division10
-      port map(
-        rst       => rst,
-        clk       => clk_src(i),
-        clkDiv10  => clk_div(i)
-      );
-  end generate;
-
-  process(clk_2kHz, rst)
-  begin
-    if(rst = '1') then
-      reg_reset     <= '0';
-      reg_counter   <= (others=> '0');
-    elsif(clk_2kHz'event and clk_2kHz = '1') then
-      if(reg_counter = kPresetCount) then
-        reg_reset   <= '1';
+    if(sync_reset = '1') then
+      reg_reset     <= '1';
+      reg_counter   <= (others=> '1');
+    elsif(clk'event and clk = '1') then
+      if(unsigned(reg_counter) = 0) then
+        reg_reset   <= '0';
       else
-        reg_counter   <= std_logic_vector(unsigned(reg_counter) +1);
+        reg_counter   <= std_logic_vector(unsigned(reg_counter) -1);
       end if;
     end if;
   end process;
 
-  uOneShotRst : entity mylib.EdgeDetector
-    port map(
-      clk   => clk_2kHz,
-      dIn   => reg_reset,
-      dOut  => rstMiiOut
-      );
+  -- Reset sequence --
+  sync_reset  <= reset_shiftreg(kWidthResetSync-1);
+  u_sync_reset : process(clk, rst)
+  begin
+    if(rst = '1') then
+      reset_shiftreg  <= (others => '1');
+    elsif(clk'event and clk = '1') then
+      reset_shiftreg  <= reset_shiftreg(kWidthResetSync-2 downto 0) & '0';
+    end if;
+  end process;
 
 end RTL;
