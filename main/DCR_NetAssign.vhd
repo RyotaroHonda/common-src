@@ -1,8 +1,10 @@
 library IEEE, mylib;
 use IEEE.STD_LOGIC_1164.ALL;
-use mylib.defToplevel.all;
 
 entity DCR_NetAssign is
+  generic(
+    kNumInputMZN  : integer:= 32
+  );
   Port (
     mznInU  : in  std_logic_vector(kNumInputMZN-1 downto 0);
     mznInD  : in  std_logic_vector(kNumInputMZN-1 downto 0);
