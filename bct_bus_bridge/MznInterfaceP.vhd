@@ -8,7 +8,7 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 
-entity MznInterface is
+entity MznInterfaceP is
   generic
     (
       invStatusMzn  : std_logic_vector(kWidthStatusMzn-1 downto 0);
@@ -70,9 +70,9 @@ entity MznInterface is
       statusMzn         : out std_logic_vector(kWidthStatusMzn-1 downto 0);
       statusBase        : in std_logic_vector(kWidthStatusBase-1 downto 0)
 );
-end MznInterface;
+end MznInterfaceP;
 
-architecture RTL of MznInterface is
+architecture RTL of MznInterfaceP is
   -- signal decralation ---------------------------------------------------
   signal masked_trigger, raw_busy  : std_logic;
 
