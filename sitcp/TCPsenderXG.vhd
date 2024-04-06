@@ -3,7 +3,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 use mylib.defSiTCP_XG.all;
-use mylib.defToplevel.all;
 
 entity TCPsenderXG is
   port(
@@ -46,18 +45,28 @@ begin
         tcpTxB	<= (others => '0');
         tcpTxD	<= (others => '0');
       else
-        if(rvFromEVB = '1') then
-          tcpTxB  <= num_byte_txd;
+        if(isActive = '1') then
+          if(rvFromEVB = '1') then
+            tcpTxB  <= num_byte_txd;
+          else
+            tcpTxB  <= "0000";
+          end if;
+
+          tcpTxD	<= rdFromEVB;
+
+          if(emptyFromEVB = '0' AND afullTx = '0') then
+            reToEVB	<= '1';
+          else
+            reToEVB	<= '0';
+          end if;
         else
           tcpTxB  <= "0000";
-        end if;
 
-        tcpTxD	<= rdFromEVB;
-
-        if(emptyFromEVB = '0' AND isActive = '1' AND afullTx = '0') then
-          reToEVB	<= '1';
-        else
-          reToEVB	<= '0';
+          if(emptyFromEVB = '0' AND afullTx = '0') then
+            reToEVB	<= '1';
+          else
+            reToEVB	<= '0';
+          end if;
         end if;
       end if;
     end if;

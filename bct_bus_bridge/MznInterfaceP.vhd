@@ -82,6 +82,17 @@ architecture RTL of MznInterfaceP is
   signal status_mzn     : std_logic_vector(kWidthStatusMzn-1 downto 0);
   signal status_base    : std_logic_vector(kWidthStatusBase-1 downto 0);
 
+  function GetIoStdStatusBase(index: integer) return string is
+  begin
+    case index is
+      when 0 => return "LVDS_25";
+      when 1 => return "LVDS_25";
+      when 2 => return kExIoStd;
+      when 3 => return kExIoStd;
+      when 4 => return "LVDS_25";
+    end case;
+  end function;
+
 begin
   -- ================================ body ================================
   -- Force Reset -------------------------------------------
@@ -148,7 +159,7 @@ begin
   gen_status_base : for i in 0 to kWidthStatusBase-1 generate
     status_base(i)  <= statusBase(i) xor invStatusBase(i);
     u_BASE_STATUS_inst : OBUFDS
-      generic map ( IOSTANDARD => "LVDS_25", SLEW => "SLOW")
+      generic map ( IOSTANDARD => GetIoStdStatusBase(i), SLEW => "SLOW")
       port map ( O => STATUS_OUT_P(i), OB => STATUS_OUT_N(i), I => status_base(i) );
   end generate;
 
