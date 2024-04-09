@@ -2,9 +2,10 @@ library IEEE, mylib;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
-use mylib.defResetGen.all;
-
 entity SystemReset is
+  generic(
+    kWidthResetSync : integer
+  );
   port(
     -- Seed of the master reset --
     asyncReset    : in std_logic;
@@ -45,11 +46,11 @@ begin
     end if;
   end process;
 
-  u_sync_sys_reset : process(async_sys_reset, clkXgmii)
+  u_sync_sys_reset : process(async_sys_reset, clkSys)
   begin
     if(async_sys_reset = '1') then
       reset_shiftreg_sys  <= (others => '1');
-    elsif(clkXgmii'event and clkXgmii = '1') then
+    elsif(clkSys'event and clkSys = '1') then
       reset_shiftreg_sys  <= reset_shiftreg_sys(kWidthResetSync-2 downto 0) & '0';
     end if;
   end process;
