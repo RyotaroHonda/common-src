@@ -58,6 +58,7 @@ entity MznInterfaceP is
       rstForce          : in std_logic;
       clkHul            : in std_logic;
       slotPosition      : in std_logic;
+      enClkOut          : in std_logic;
 
       -- Bct Bus Bridge --
       bbpPrimActive     : in std_logic;
@@ -121,7 +122,7 @@ begin
     port map (
       Q  => clk_hul,   -- 1-bit DDR output
       C  => clkHul,    -- 1-bit clock input
-      CE => '1',       -- 1-bit clock enable input
+      CE => enClkOut,       -- 1-bit clock enable input
       D1 => invClk(0), -- 1-bit data input (positive edge)
       D2 => invClk(1), -- 1-bit data input (negative edge)
       R  => '0',       -- 1-bit reset input
