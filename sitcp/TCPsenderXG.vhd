@@ -62,7 +62,7 @@ begin
         else
           tcpTxB  <= "0000";
 
-          if(emptyFromEVB = '0' AND afullTx = '0') then
+          if(emptyFromEVB = '0') then
             reToEVB	<= '1';
           else
             reToEVB	<= '0';
