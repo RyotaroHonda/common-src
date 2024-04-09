@@ -66,6 +66,9 @@ architecture RTL of BctBridgeSecondary is
   attribute mark_debug of we_bct            : signal is enDebug;
   attribute mark_debug of ack_bct           : signal is enDebug;
 
+  attribute mark_debug of reg_sr_rxd           : signal is enDebug;
+  attribute mark_debug of reg_sr_txd           : signal is enDebug;
+
 -- =============================== body ===============================
 begin
   -- Serial I/F --
@@ -91,15 +94,13 @@ begin
     end if;
   end process;
 
-  u_sr_tx : process(clkBridge)
+  u_sr_tx : process(clkBridge, set_txd)
   begin
-    if(clkBridge'event and clkBridge = '1') then
-      if(set_txd = '1') then
-        reg_sr_txd  <= kComAck & addr_bct & txd_bct;
-      else
-        if(primIsActive = '1') then
-          reg_sr_txd  <= reg_sr_txd(kWidthBctData-2 downto 0) & '0';
-        end if;
+    if(set_txd = '1') then
+      reg_sr_txd  <= kComAck & addr_bct & txd_bct;
+    elsif(clkBridge'event and clkBridge = '1') then
+      if(primIsActive = '1') then
+        reg_sr_txd  <= reg_sr_txd(kWidthBctData-2 downto 0) & '0';
       end if;
     end if;
   end process;
