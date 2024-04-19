@@ -27,6 +27,7 @@ architecture RTL of SystemReset is
   signal reset_shiftreg_xgmii  : std_logic_vector(kWidthResetSync-1 downto 0);
   signal reset_shiftreg_sys    : std_logic_vector(kWidthResetSync-1 downto 0);
   signal async_sys_reset  : std_logic;
+  signal tmp_reset        : std_logic;
 
 -- ================================ body ==================================
 begin
@@ -35,7 +36,10 @@ begin
   syncXgmiiReset  <= reset_shiftreg_xgmii(kWidthResetSync-1);
   syncSysReset    <= reset_shiftreg_sys(kWidthResetSync-1);
 
-  async_sys_reset   <= asyncReset or (not qpllLocked);
+  tmp_reset       <= asyncReset or (not qpllLocked);
+
+  u_KeepRst : entity mylib.RstDelayTimer
+    port map(tmp_reset, X"1FFFFFFF", clkSys, open, async_sys_reset);
 
   u_sync_xgmii_reset : process(async_sys_reset, clkXgmii)
   begin
