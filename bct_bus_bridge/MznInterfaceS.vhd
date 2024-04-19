@@ -14,8 +14,8 @@ entity MznInterfaceS is
       -- system ports --
       FRST_P            : in std_logic;
       FRST_N            : in std_logic;
-      CLKHUL_P          : in std_logic;
-      CLKHUL_N          : in std_logic;
+      --CLKHUL_P          : in std_logic;
+      --CLKHUL_N          : in std_logic;
       SLOT_POS_P        : in std_logic;
       SLOT_POS_N        : in std_logic;
 
@@ -41,7 +41,7 @@ entity MznInterfaceS is
       -- Internal signals ---------------------------------------------
       -- System ports --
       forceReset        : out std_logic;
-      clkHul            : out std_logic;
+      --clkHul            : out std_logic;
       slotPosition      : out std_logic;
 
       -- Bct Bus Bridge --
@@ -68,9 +68,9 @@ begin
     generic map ( DIFF_TERM => TRUE, IBUF_LOW_PWR => TRUE, IOSTANDARD => "LVDS_25")
     port map ( O => forceReset, I => FRST_P, IB => FRST_N );
 
-  u_clkhul_inst : IBUFDS
-    generic map ( DIFF_TERM => TRUE, IBUF_LOW_PWR => FALSE, IOSTANDARD => "LVDS_25")
-    port map ( O => clkHul, I => CLKHUL_P, IB => CLKHUL_N );
+--  u_clkhul_inst : IBUFDS
+--    generic map ( DIFF_TERM => TRUE, IBUF_LOW_PWR => FALSE, IOSTANDARD => "LVDS_25")
+--    port map ( O => clkHul, I => CLKHUL_P, IB => CLKHUL_N );
 
   u_slotpos_inst : IBUFDS
     generic map ( DIFF_TERM => TRUE, IBUF_LOW_PWR => FALSE, IOSTANDARD => "LVDS_25")
