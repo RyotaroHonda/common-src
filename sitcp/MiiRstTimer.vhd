@@ -21,23 +21,26 @@ architecture RTL of MiiRstTimer is
   signal sync_reset           : std_logic;
   constant kWidthResetSync    : integer:= 16;
   signal reset_shiftreg       : std_logic_vector(kWidthResetSync-1 downto 0);
+  signal dreset_shiftreg      : std_logic_vector(kWidthResetSync-1 downto 0);
 
   -- signal decralation -----------------------------------------------------
-  signal reg_reset    : std_logic:= '1';
+  signal delay_reset  : std_logic;
   signal reg_counter  : std_logic_vector(kWidthCounter-1 downto 0):= (others => '1');
+
 
 begin
   -- ====================== body ============================= --
-  rstMiiOut <= reg_reset;
+  rstMiiOut <= sync_reset or delay_reset;
 
-  process(clk, sync_reset)
+  delay_reset <= dreset_shiftreg(kWidthResetSync-1);
+  process(clk)
   begin
     if(sync_reset = '1') then
-      reg_reset     <= '1';
-      reg_counter   <= (others=> '1');
+      dreset_shiftreg   <= (kWidthResetSync-1 => '0', others => '1');
+      reg_counter       <= (others=> '1');
     elsif(clk'event and clk = '1') then
       if(unsigned(reg_counter) = 0) then
-        reg_reset   <= '0';
+        dreset_shiftreg  <= reset_shiftreg(kWidthResetSync-2 downto 0) & '0';
       else
         reg_counter   <= std_logic_vector(unsigned(reg_counter) -1);
       end if;
@@ -46,7 +49,7 @@ begin
 
   -- Reset sequence --
   sync_reset  <= reset_shiftreg(kWidthResetSync-1);
-  u_sync_reset : process(clk, rst)
+  process(clk)
   begin
     if(rst = '1') then
       reset_shiftreg  <= (others => '1');
