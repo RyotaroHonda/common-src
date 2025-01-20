@@ -2,6 +2,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity ResetGen is
+    generic(
+      kWidthResetSync  : integer:= 5
+    );
     port (
       rst       : in std_logic;
       clk       : in std_logic;
@@ -11,7 +14,7 @@ end ResetGen;
 
 architecture RTL of ResetGen is
   -- Internal signal declaration ---------------------------------------
-  constant kWidthResetSync  : integer:= 5;
+  --constant kWidthResetSync  : integer:= 5;
   signal reg_reset          : std_logic_vector(kWidthResetSync-1 downto 0);
 
   attribute async_reg : string;
