@@ -52,6 +52,7 @@ entity MznInterfaceS is
       bbsPiso           : in std_logic;
 
       -- Status ports --
+      syncClk           : in std_logic;
       statusMzn         : in std_logic_vector(kWidthStatusMzn-1 downto 0);
       statusBase        : out std_logic_vector(kWidthStatusBase-1 downto 0)
 
@@ -59,6 +60,8 @@ entity MznInterfaceS is
 end MznInterfaceS;
 
 architecture RTL of MznInterfaceS is
+
+  signal status_base    : std_logic_vector(statusBase'range);
 
 
 begin
@@ -108,8 +111,9 @@ begin
   gen_status_base : for i in 0 to kWidthStatusBase-1 generate
     u_ids_status_inst : IBUFDS
       generic map ( DIFF_TERM => TRUE, IBUF_LOW_PWR => FALSE, IOSTANDARD => "LVDS_25")
-      port map ( O => statusBase(i), I => STATUS_BASE_P(i), IB => STATUS_BASE_N(i) );
-  end generate;
+      port map ( O => status_base(i), I => STATUS_BASE_P(i), IB => STATUS_BASE_N(i) );
 
+    u_sync : entity mylib.synchronizer  port map(syncClk, status_base(i), statusBase(i));
+  end generate;
 
 end RTL;

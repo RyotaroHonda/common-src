@@ -7,7 +7,7 @@ package defMIF is
   constant kWidthStatusBase      : integer:= 5;
 
   -- Mezzanine to Base --
-  constant kIdMznInThrottlingT2  : integer:= 0;
+  constant kIdMznRecoveryRst     : integer:= 0;
 
   -- Base to Mezzanine --
   constant kIdBaseProgFullBMgr   : integer:= 0;
