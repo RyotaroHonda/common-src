@@ -77,11 +77,12 @@ architecture RTL of MznInterfaceP is
   -- signal decralation ---------------------------------------------------
   signal masked_trigger, raw_busy  : std_logic;
 
-  signal clk_hul        : std_logic;
-  signal rst_force      : std_logic;
-  signal slot_pos       : std_logic;
-  signal status_mzn     : std_logic_vector(kWidthStatusMzn-1 downto 0);
-  signal status_base    : std_logic_vector(kWidthStatusBase-1 downto 0);
+  signal clk_hul          : std_logic;
+  signal rst_force        : std_logic;
+  signal slot_pos         : std_logic;
+  signal status_mzn       : std_logic_vector(kWidthStatusMzn-1 downto 0);
+  signal sync_status_mzn  : std_logic_vector(kWidthStatusMzn-1 downto 0);
+  signal status_base      : std_logic_vector(kWidthStatusBase-1 downto 0);
 
   function GetIoStdStatusBase(index: integer) return string is
   begin
@@ -151,10 +152,12 @@ begin
 
   -- STATUS -----------------------------------------------------
   gen_status_mzn : for i in 0 to kWidthStatusMzn-1 generate
-    statusMzn(i) <= status_mzn(i) xor invStatusMzn(i);
+    statusMzn(i) <= sync_status_mzn(i) xor invStatusMzn(i);
     u_MZN_STATUS_inst : IBUFDS
       generic map ( DIFF_TERM => TRUE, IBUF_LOW_PWR => TRUE, IOSTANDARD => "LVDS_25")
       port map ( O => status_mzn(i), I => STATUS_IN_P(i), IB => STATUS_IN_N(i) );
+
+    u_sync : entity mylib.synchronizer port map(clkHul, status_mzn(i), sync_status_mzn(i));
   end generate;
 
   gen_status_base : for i in 0 to kWidthStatusBase-1 generate
